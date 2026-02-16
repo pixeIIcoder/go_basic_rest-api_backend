@@ -11,7 +11,7 @@ import (
 func getEvents(context *gin.Context) {
 	events, err := models.GetAllEvents()
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not parse request data"})
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch Events Please Try again Later"})
 		return
 	}
 	context.JSON(http.StatusOK, events)
@@ -25,7 +25,7 @@ func getEvent(context *gin.Context) {
 	}
 	event, err := models.GetEventById(eventId)
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch the Event Please Try again Later"})
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch the Event Please Try again Later", "error": err.Error()})
 		return
 	}
 	context.JSON(http.StatusOK, event)
