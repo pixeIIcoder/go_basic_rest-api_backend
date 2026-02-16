@@ -16,7 +16,7 @@ func InitDB() {
 	}
 
 	// Verify connection
-	if err := DB.Ping(); err != nil {
+	if err = DB.Ping(); err != nil {
 		panic("Database is not reachable")
 	}
 
@@ -27,6 +27,18 @@ func InitDB() {
 }
 
 func createTables() {
+	createUsertable := `
+	CREATE TABLE IF NOT EXISTS users(
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		email TEXT NOT NULL UNIQUE,
+		password TEXT NOT NULL
+	)
+	`
+	_, err := DB.Exec(createUsertable)
+	if err != nil {
+		panic("Could not create users table")
+	}
+
 	createEventsTable := `
 	CREATE TABLE IF NOT EXISTS events (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -34,11 +46,11 @@ func createTables() {
 		description TEXT NOT NULL,
 		location TEXT NOT NULL,
 		datetime DATETIME NOT NULL,
-		user_id INTEGER
+		user_id INTEGER,
+		FOREIGN KEY(user_id) REFERENCES users(id)
 	);
 	`
-
-	_, err := DB.Exec(createEventsTable)
+	_, err = DB.Exec(createEventsTable)
 	if err != nil {
 		panic("Could not create events table")
 	}
