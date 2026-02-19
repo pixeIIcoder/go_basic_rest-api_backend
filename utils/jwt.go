@@ -18,28 +18,36 @@ func GenerateToken(email string, userId int64) (string, error) {
 
 	return token.SignedString([]byte(secretKey))
 }
-func VerifyToken(tokenString string) error {
-	parsedtoken, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+func VerifyToken(tokenString string) (int64, error) {
 
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+	if tokenString == "" {
+		return 0, errors.New("empty token")
+	}
+
+	claims := jwt.MapClaims{}
+
+	parsedToken, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+
+		// Check algorithm properly
+		if token.Method.Alg() != jwt.SigningMethodHS256.Alg() {
 			return nil, jwt.ErrSignatureInvalid
 		}
 
 		return []byte(secretKey), nil
 	})
-	tokenIsValid := parsedtoken.Valid
+
 	if err != nil {
-		return errors.New("Could not parse the Token")
-	}
-	if !tokenIsValid {
-		return errors.New("Invalid Token")
-	}
-	_, ok := parsedtoken.Claims.(jwt.MapClaims)
-	if !ok {
-		return errors.New("Invalid token Claims")
+		return 0, err
 	}
 
-	// email := claims["email"].(string)
-	// userId := claims["userId"].(int64)
-	return nil
+	if parsedToken == nil || !parsedToken.Valid {
+		return 0, errors.New("invalid token")
+	}
+
+	userIdFloat, ok := claims["userId"].(float64)
+	if !ok {
+		return 0, errors.New("userId not found in token")
+	}
+
+	return int64(userIdFloat), nil
 }
